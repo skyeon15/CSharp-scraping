@@ -24,7 +24,7 @@ namespace COVID19_status
             string[] recovered = data.Split(",");
             //현재 치료중 계산
             var hos = string.Format("{0:#,###}", Convert.ToInt32(current[0]) - Convert.ToInt32(recovered[0]) - Convert.ToInt32(die[0]));
-            var hos2 = string.Format("{0:#,###}", Convert.ToInt32(current[1]) - Convert.ToInt32(recovered[1]) - Convert.ToInt32(die[1]));
+            var hos2 = string.Format("{0:+#,###;-#,###}", Convert.ToInt32(current[1]) - Convert.ToInt32(recovered[1]) - Convert.ToInt32(die[1]));
             //실시간 확진자
             var today = string.Format("{0:#,###}", Convert.ToInt32(Regex.Replace(json["statsLive"]["today"].ToString(), @"[\s\[\]]", "")));
 
