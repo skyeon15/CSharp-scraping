@@ -5,12 +5,29 @@ using System;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
+using NSoup.Select;
 
-namespace COVID19_status
+namespace CSharps_craping
 {
     class Program
     {
-        static void Main(string[] args)
+        //static void Main(string[] args)
+        static void Main()
+        {
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.Write("==========\n1 : 코로나 현황\n2 : 네이버 웹툰 순위\n==========\n번호입력 : ");
+            string input = Console.ReadLine();
+            Console.WriteLine("==========");
+            Console.ForegroundColor = ConsoleColor.White;
+            if (input == "1") COVID();
+            else if (input == "2") webtoon();
+            else
+            {
+                Console.WriteLine($"{input}은 존재하지 않습니다.");
+            }
+            Main();
+        }
+        static void COVID()
         {
             WebClient wc = new WebClient() { Encoding = Encoding.UTF8 };
             JObject json = JObject.Parse(wc.DownloadString("https://apiv2.corona-live.com/domestic-init.json"));
@@ -53,6 +70,32 @@ namespace COVID19_status
             var sec_sum = string.Format("{0:#,###}", Convert.ToInt32(doc.Select("secondCnt").Eq(2).Text));
 
             Console.WriteLine($"\n백신 접종 현황\n1차 접종 : {fir_sum}(+{fir_day})\n2차 접종 : {sec_sum}(+{sec_day})");
+        }
+        static void webtoon()
+        {
+            //네이버 웹툰에서 오늘 해당 요일 웹툰 스크래핑
+            Document doc = NSoupClient.Parse(new Uri("https://m.comic.naver.com/webtoon/weekday"), 5000);
+            Elements datas = doc.Select("div.section_list_toon ul.list_toon li");
+
+            //요일 확인
+            string day = doc.Select("div.area_sublnb.lnb_weekday h3.blind").Text;
+            //제목, 작가, URL 각 5개 선언
+            string[] title = new string[5], author = new string[5], url = new string[5];
+            //제목, 작가, URL 5번 불러오기
+            for (int i = 0; i < 5; i++)
+            {
+                title[i] = datas.Eq(i).Select("div.info strong.title").Text;
+                author[i] = datas.Eq(i).Select("div.info span.author").Text;
+                url[i] = datas.Eq(i).Select("a").Attr("href");
+            }
+
+            //출력
+            Console.WriteLine($"{day} 웹툰 순위" +
+                $"\n1. [{title[0]} - {author[0]}](https://comic.naver.com{url[0]})" +
+                $"\n2. [{title[1]} - {author[1]}](https://comic.naver.com{url[1]})" +
+                $"\n3. [{title[2]} - {author[2]}](https://comic.naver.com{url[2]})" +
+                $"\n4. [{title[3]} - {author[3]}](https://comic.naver.com{url[3]})" +
+                $"\n5. [{title[4]} - {author[4]}](https://comic.naver.com{url[4]})");
         }
     }
 }
