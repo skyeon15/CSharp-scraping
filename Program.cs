@@ -15,12 +15,13 @@ namespace CSharps_craping
         static void Main()
         {
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.Write("==========\n1 : 코로나 현황\n2 : 네이버 웹툰 순위\n==========\n번호입력 : ");
+            Console.Write("==========\n1 : 코로나 현황\n2 : 네이버 웹툰 순위\n3 : 학교 급식\n==========\n번호입력 : ");
             string input = Console.ReadLine();
             Console.WriteLine("==========");
             Console.ForegroundColor = ConsoleColor.White;
             if (input == "1") COVID();
             else if (input == "2") webtoon();
+            else if (input == "3") Eat();
             else
             {
                 Console.WriteLine($"{input}은 존재하지 않습니다.");
@@ -96,6 +97,25 @@ namespace CSharps_craping
                 $"\n3. [{title[2]} - {author[2]}](https://comic.naver.com{url[2]})" +
                 $"\n4. [{title[3]} - {author[3]}](https://comic.naver.com{url[3]})" +
                 $"\n5. [{title[4]} - {author[4]}](https://comic.naver.com{url[4]})");
+        }
+
+        static void Eat()
+        {
+            Console.Write("학교이름 : ");
+            string school = Console.ReadLine();
+
+            Document doc = NSoupClient.Parse(new Uri($"https://open.neis.go.kr/hub/schoolInfo?KEY=fe74198d943c4019b9f1a01de4feaae7&SCHUL_NM={school}"), 5000);
+            string edu = doc.Select("ATPT_OFCDC_SC_CODE").Text;
+            school = doc.Select("SD_SCHUL_CODE").Text;
+
+            string date = DateTime.Now.ToString("yyyyMMdd");
+            doc = NSoupClient.Parse(new Uri($"https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=fe74198d943c4019b9f1a01de4feaae7&ATPT_OFCDC_SC_CODE={edu}&SD_SCHUL_CODE={school}&MLSV_YMD={date}"), 5000);
+            Elements datas = doc.Select("row");
+            foreach (Element data in datas)
+            {
+                Console.WriteLine($"{data.Select("SCHUL_NM").Text} {data.Select("MMEAL_SC_NM").Text}\n" +
+                    $"{data.Select("DDISH_NM").Text.Replace("<br/>", "\n")}");
+            }
         }
     }
 }
