@@ -102,20 +102,32 @@ namespace CSharps_craping
         static void Eat()
         {
             Console.Write("학교이름 : ");
-            string school = Console.ReadLine();
+            string school_str = Console.ReadLine();
 
-            Document doc = NSoupClient.Parse(new Uri($"https://open.neis.go.kr/hub/schoolInfo?KEY=fe74198d943c4019b9f1a01de4feaae7&SCHUL_NM={school}"), 5000);
+            Document doc = NSoupClient.Parse(new Uri($"https://open.neis.go.kr/hub/schoolInfo?KEY=fe74198d943c4019b9f1a01de4feaae7&SCHUL_NM={school_str}"), 5000);
             string edu = doc.Select("ATPT_OFCDC_SC_CODE").Text;
-            school = doc.Select("SD_SCHUL_CODE").Text;
+            string school = doc.Select("SD_SCHUL_CODE").Text;
 
             string date = DateTime.Now.ToString("yyyyMMdd");
             doc = NSoupClient.Parse(new Uri($"https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=fe74198d943c4019b9f1a01de4feaae7&ATPT_OFCDC_SC_CODE={edu}&SD_SCHUL_CODE={school}&MLSV_YMD={date}"), 5000);
             Elements datas = doc.Select("row");
+            string eat_result = "";
             foreach (Element data in datas)
             {
-                Console.WriteLine($"{data.Select("SCHUL_NM").Text} {data.Select("MMEAL_SC_NM").Text}\n" +
-                    $"{data.Select("DDISH_NM").Text.Replace("<br/>", "\n")}");
+                eat_result += $"**{data.Select("MMEAL_SC_NM").Text}**\n" +
+                    $"{data.Select("DDISH_NM").Text.Replace("<br/>", "\n")}\n\n";
             }
+            if (eat_result == "")
+            {
+                if (DateTime.Now.DayOfWeek == DayOfWeek.Saturday || DateTime.Now.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    Console.WriteLine("주말에는 급식이 없어용");
+                    return;
+                }
+                Console.WriteLine($"{school_str}에 대한 오늘 급식정보를 찾지 못 했어요.");
+                return;
+            }
+            Console.WriteLine($"{doc.Select("SCHUL_NM").Eq(0).Text} 급식정보\n" + eat_result);
         }
     }
 }
