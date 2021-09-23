@@ -11,24 +11,39 @@ namespace CSharps_craping
 {
     class Program
     {
-        //static void Main(string[] args)
         static void Main()
         {
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.Write("==========\n1 : 코로나 현황\n2 : 네이버 웹툰 순위\n3 : 학교 급식\n==========\n번호입력 : ");
+            Console.Write("==========\n1 : 코로나 현황\n" +
+                "2 : 네이버 웹툰 순위\n" +
+                "3 : 학교 급식\n" +
+                "4 : 롤전적검색(OP.GG) 미완성\n" +
+                "==========\n번호입력 : ");
+
             string input = Console.ReadLine();
             Console.WriteLine("==========");
             Console.ForegroundColor = ConsoleColor.White;
-            if (input == "1") COVID();
-            else if (input == "2") webtoon();
-            else if (input == "3") Eat();
+            if (input == "1")
+            {
+                Console.WriteLine(COVID());
+            }
+            else if (input == "2")
+            {
+                Console.WriteLine(webtoon());
+            }
+            else if (input == "3")
+            {
+                Console.Write("학교이름 : ");
+                Console.WriteLine(Eat(Regex.Replace(Console.ReadLine(), @"[^a-zA-Z0-9가-힣_]", "", RegexOptions.Singleline)));
+            }
+            else if (input == "4") Opgg();
             else
             {
                 Console.WriteLine($"{input}은 존재하지 않습니다.");
             }
             Main();
         }
-        static void COVID()
+        static string COVID()
         {
             WebClient wc = new WebClient() { Encoding = Encoding.UTF8 };
             JObject json = JObject.Parse(wc.DownloadString("https://apiv2.corona-live.com/domestic-init.json"));
@@ -70,9 +85,9 @@ namespace CSharps_craping
             var sec_day = string.Format("{0:#,###}", Convert.ToInt32(doc.Select("secondCnt").Eq(0).Text));
             var sec_sum = string.Format("{0:#,###}", Convert.ToInt32(doc.Select("secondCnt").Eq(2).Text));
 
-            Console.WriteLine($"\n백신 접종 현황\n1차 접종 : {fir_sum}(+{fir_day})\n2차 접종 : {sec_sum}(+{sec_day})");
+            return $"\n백신 접종 현황\n1차 접종 : {fir_sum}(+{fir_day})\n2차 접종 : {sec_sum}(+{sec_day})";
         }
-        static void webtoon()
+        static string webtoon()
         {
             //네이버 웹툰에서 오늘 해당 요일 웹툰 스크래핑
             Document doc = NSoupClient.Parse(new Uri("https://m.comic.naver.com/webtoon/weekday"), 5000);
@@ -91,26 +106,27 @@ namespace CSharps_craping
             }
 
             //출력
-            Console.WriteLine($"{day} 웹툰 순위" +
+            return $"{day} 웹툰 순위" +
                 $"\n1. [{title[0]} - {author[0]}](https://comic.naver.com{url[0]})" +
                 $"\n2. [{title[1]} - {author[1]}](https://comic.naver.com{url[1]})" +
                 $"\n3. [{title[2]} - {author[2]}](https://comic.naver.com{url[2]})" +
                 $"\n4. [{title[3]} - {author[3]}](https://comic.naver.com{url[3]})" +
-                $"\n5. [{title[4]} - {author[4]}](https://comic.naver.com{url[4]})");
+                $"\n5. [{title[4]} - {author[4]}](https://comic.naver.com{url[4]})";
         }
 
-        static void Eat()
+        static string Eat(string school_str)
         {
-            Console.Write("학교이름 : ");
-            string school_str = Console.ReadLine();
-
+            //학교 번호, 교육청 코드 API 호출
             Document doc = NSoupClient.Parse(new Uri($"https://open.neis.go.kr/hub/schoolInfo?KEY=fe74198d943c4019b9f1a01de4feaae7&SCHUL_NM={school_str}"), 5000);
             string edu = doc.Select("ATPT_OFCDC_SC_CODE").Text;
             string school = doc.Select("SD_SCHUL_CODE").Text;
 
+            //급식 API 호출
             string date = DateTime.Now.ToString("yyyyMMdd");
             doc = NSoupClient.Parse(new Uri($"https://open.neis.go.kr/hub/mealServiceDietInfo?KEY=fe74198d943c4019b9f1a01de4feaae7&ATPT_OFCDC_SC_CODE={edu}&SD_SCHUL_CODE={school}&MLSV_YMD={date}"), 5000);
             Elements datas = doc.Select("row");
+
+            //등록된 급식 수만큼 호출(조식,중식,석식 등)
             string eat_result = "";
             foreach (Element data in datas)
             {
@@ -121,13 +137,16 @@ namespace CSharps_craping
             {
                 if (DateTime.Now.DayOfWeek == DayOfWeek.Saturday || DateTime.Now.DayOfWeek == DayOfWeek.Sunday)
                 {
-                    Console.WriteLine("주말에는 급식이 없어용");
-                    return;
+                    return "주말에는 급식이 없어용";
                 }
-                Console.WriteLine($"{school_str}에 대한 오늘 급식정보를 찾지 못 했어요.");
-                return;
+                return $"{school_str}에 대한 오늘 급식정보를 찾지 못 했어요.";
             }
-            Console.WriteLine($"{doc.Select("SCHUL_NM").Eq(0).Text} 급식정보\n" + eat_result);
+            return $"{doc.Select("SCHUL_NM").Eq(0).Text} 급식정보\n" + eat_result;
+        }
+
+        static void Opgg()
+        {
+
         }
     }
 }
