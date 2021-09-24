@@ -29,7 +29,7 @@ namespace CSharps_craping
             }
             else if (input == "2")
             {
-                Console.WriteLine(webtoon());
+                Console.WriteLine(Webtoon());
             }
             else if (input == "3")
             {
@@ -71,10 +71,6 @@ namespace CSharps_craping
             recovered[0] = string.Format("{0:#,###}", Convert.ToInt32(recovered[0]));
             recovered[1] = string.Format("({0:+#,###;-#,###})", Convert.ToInt32(recovered[1]));
 
-            Console.WriteLine($"실시간 국내 코로나 현황\n오늘 실시간 : {today}명" +
-                $"\n\n0시 기준\n확진환자 : {current[0]}{current[1]}\n치료중 : {hos}{hos2}\n격리해제 : {recovered[0]}{recovered[1]}" +
-                $"\n사망자 : {die[0]}{die[1]}");
-
             //백신접종자 스크래핑을 위해 User-Agent 설정(안 하면 API에서 거부함)
             wc.Headers.Add("User-Agent", "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.3; WOW64; Trident/7.0)");
             Document doc = NSoupClient.Parse(wc.DownloadString("https://nip.kdca.go.kr/irgd/cov19stats.do"));
@@ -85,9 +81,12 @@ namespace CSharps_craping
             var sec_day = string.Format("{0:#,###}", Convert.ToInt32(doc.Select("secondCnt").Eq(0).Text));
             var sec_sum = string.Format("{0:#,###}", Convert.ToInt32(doc.Select("secondCnt").Eq(2).Text));
 
-            return $"\n백신 접종 현황\n1차 접종 : {fir_sum}(+{fir_day})\n2차 접종 : {sec_sum}(+{sec_day})";
+            return $"실시간 국내 코로나 현황\n오늘 실시간 : {today}명" +
+                $"\n\n0시 기준\n확진환자 : {current[0]}{current[1]}\n치료중 : {hos}{hos2}\n격리해제 : {recovered[0]}{recovered[1]}" +
+                $"\n사망자 : {die[0]}{die[1]}" +
+                $"\n\n백신 접종 현황\n1차 접종 : {fir_sum}(+{fir_day})\n2차 접종 : {sec_sum}(+{sec_day})";
         }
-        static string webtoon()
+        static string Webtoon()
         {
             //네이버 웹툰에서 오늘 해당 요일 웹툰 스크래핑
             Document doc = NSoupClient.Parse(new Uri("https://m.comic.naver.com/webtoon/weekday"), 5000);
