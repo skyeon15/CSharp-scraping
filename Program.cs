@@ -17,7 +17,7 @@ namespace CSharps_craping
             Console.Write("==========\n1 : 코로나 현황\n" +
                 "2 : 네이버 웹툰 순위\n" +
                 "3 : 학교 급식\n" +
-                "4 : 롤전적검색(OP.GG) 미완성\n" +
+                "4 : 지상파 편성표\n" +
                 "==========\n번호입력 : ");
 
             string input = Console.ReadLine();
@@ -36,7 +36,10 @@ namespace CSharps_craping
                 Console.Write("학교이름 : ");
                 Console.WriteLine(Eat(Regex.Replace(Console.ReadLine(), @"[^a-zA-Z0-9가-힣_]", "", RegexOptions.Singleline)));
             }
-            else if (input == "4") Opgg();
+            else if (input == "4")
+            {
+                Console.WriteLine(TV());
+            }
             else
             {
                 Console.WriteLine($"{input}은 존재하지 않습니다.");
@@ -143,9 +146,33 @@ namespace CSharps_craping
             return $"{doc.Select("SCHUL_NM").Eq(0).Text} 급식정보\n" + eat_result;
         }
 
-        static void Opgg()
+        static string TV()
         {
+            //네이버 검색에서 편성표 스크래핑
+            Document doc = NSoupClient.Parse(new Uri("https://m.search.naver.com/search.naver?query=%ED%8E%B8%EC%84%B1%ED%91%9C"), 5000);
+            Elements datas = doc.Select("li.program_item.on");
 
+            //리턴 문자열 선언
+            string str_return = "";
+            //방송사 파싱을 위한 int 선언
+            int i = 0;
+
+            foreach (var data in datas)
+            {
+                //url과 프로그램 이름 선택
+                string url = data.Select(".pr_name").Attr("href"), name = data.Select(".pr_name").Text;
+
+                //url 비어있으면 프로그램 이름 검색
+                if (url == "") url = "http://search.naver.com/search.naver?query=" + name.Replace(" ", "%20");
+                //url 있으면 검색 url
+                else url = "http://search.naver.com/search.naver?" + url.Substring(url.IndexOf("query="));
+
+                //리턴 문자열 넣기
+                str_return += $"{doc.Select("span.els").Eq(i).Text} [{name}]({url})\n";
+                i++;
+            }
+
+            return str_return;
         }
     }
 }
